@@ -1,10 +1,13 @@
 [tool.poetry]
 name = "allure-api-client"
-version = "1.1.0"
+version = "1.1.1"
 description = "API Client for Python ^3.11 and Pytest projects. It includes the Allure request/response hooks and the status code checking inside the main method. Request hook generates cURL, Response hook represents the useful information."
 authors = ["amaym0n <loco.skitls@gmail.com>"]
 license = "MIT License"
 readme = "README.md"
+packages = [
+    { include = "allure_api_client" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
