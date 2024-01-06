@@ -4,7 +4,8 @@ from http import HTTPStatus
 from typing import Any
 from typing import Callable
 
-from httpx import Client
+import allure
+from httpx import AsyncClient, Response
 from httpx import Cookies
 from pydantic import HttpUrl
 
@@ -12,7 +13,7 @@ from allure_api_client.hooks import request_hook, response_hook
 from allure_api_client.status_code_method import check_status_code
 
 
-class APIClient(Client):
+class AsyncAPIClient(AsyncClient):
 
     def __init__(
             self,
@@ -35,7 +36,7 @@ class APIClient(Client):
         self.cookies = cookies
         self.base_url = base_url
 
-    def send_request(
+    async def send_request(
             self,
             method: str,
             path: str,
@@ -47,9 +48,9 @@ class APIClient(Client):
             follow_redirects: bool = True,
             timeout=300,
             status_code: int = HTTPStatus.OK,
-    ):
+    ) -> Response:
         """ Send HTTP-request """
-        response = self.request(
+        response = await self.request(
             method=method,
             url=f'{self.base_url}{path}',
             headers=headers, params=params,
@@ -60,3 +61,5 @@ class APIClient(Client):
         )
         check_status_code(response=response, status_code=status_code)
         return response
+
+
