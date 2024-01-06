@@ -4,7 +4,6 @@ from http import HTTPStatus
 from typing import Any
 from typing import Callable
 
-import allure
 from httpx import AsyncClient, Response
 from httpx import Cookies
 from pydantic import HttpUrl
@@ -61,5 +60,3 @@ class AsyncAPIClient(AsyncClient):
         )
         check_status_code(response=response, status_code=status_code)
         return response
-
-
