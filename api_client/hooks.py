@@ -1,6 +1,7 @@
 import logging
 
-from httpx import Response, Request
+from httpx import Request
+from httpx import Response
 
 logger = logging.getLogger()
 

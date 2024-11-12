@@ -4,11 +4,15 @@ from http import HTTPStatus
 from typing import Any
 from typing import Callable
 
-from httpx import AsyncClient, Response
+from httpx import AsyncClient
 from httpx import Cookies
+from httpx import Response
 from pydantic import HttpUrl
 
-from api_client.hooks import request_hook, response_hook
+from api_client.hooks import allure_request_hook
+from api_client.hooks import allure_response_hook
+from api_client.hooks import request_hook
+from api_client.hooks import response_hook
 from api_client.status_code_method import check_status_code
 
 
@@ -42,8 +46,14 @@ class AsyncAPIClient(AsyncClient):
             cookies: Cookies | None = None,
             auth: Callable[..., Any] | object | None = None,
             verify: bool = False,
+            with_allure: bool = True,
     ) -> None:
-        super().__init__(auth=None, verify=verify, event_hooks={'request': [request_hook], 'response': [response_hook]})
+        if with_allure:
+            super().__init__(auth=None, verify=verify, event_hooks={'request': [allure_request_hook],
+                                                                    'response': [allure_response_hook]})
+        else:
+            super().__init__(auth=None, verify=verify, event_hooks={'request': [request_hook],
+                                                                    'response': [response_hook]})
         self.auth = auth
         self.cookies = cookies
         self.base_url = base_url

@@ -1,6 +1,8 @@
 from typing import Generator
 
-from httpx import Auth, Request, Response
+from httpx import Auth
+from httpx import Request
+from httpx import Response
 
 
 class BearerToken(Auth):
