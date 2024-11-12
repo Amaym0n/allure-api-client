@@ -25,7 +25,7 @@ pip install allure-api-client
 ### Synchronous API Client
 
 ```python
-from allure_api_client import APIClient
+from api_client import APIClient
 
 # Initialize the client
 client = APIClient(
@@ -44,7 +44,7 @@ response = client.send_request(
 ### Asynchronous API Client
 
 ```python
-from allure_api_client import AsyncAPIClient
+from api_client import AsyncAPIClient
 
 # Initialize the client
 async with AsyncAPIClient(
@@ -62,7 +62,7 @@ async with AsyncAPIClient(
 ### Bearer Token Authentication
 
 ```python
-from allure_api_client import BearerToken
+from api_client import BearerToken
 
 # Initialize the bearer token
 auth = BearerToken("YOUR_ACCESS_TOKEN")
@@ -73,7 +73,7 @@ auth = BearerToken("YOUR_ACCESS_TOKEN")
 ### Checking Status Code
 
 ```python
-from allure_api_client import check_status_code
+from api_client import check_status_code
 
 # After receiving a response
 check_status_code(response, 200)  # Verifies that the status code is 200

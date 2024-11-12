@@ -8,8 +8,8 @@ from httpx import AsyncClient, Response
 from httpx import Cookies
 from pydantic import HttpUrl
 
-from allure_api_client.hooks import request_hook, response_hook
-from allure_api_client.status_code_method import check_status_code
+from api_client.hooks import request_hook, response_hook
+from api_client.status_code_method import check_status_code
 
 
 class AsyncAPIClient(AsyncClient):
