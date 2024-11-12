@@ -1,4 +1,3 @@
-import allure
 from httpx import Response
 
 
@@ -24,7 +23,6 @@ def check_status_code(response: Response, status_code: int) -> None:
         response = client.get('https://example.com/api/resource')
         check_status_code(response, 200) # Checks if the status code of the response is 200
     """
-    with allure.step('Checking the status of the request code'):
-        assert response.status_code == status_code, \
-            f"""Wrong status code, expected: {status_code}, received: {response.status_code}
-                message: {response.text}"""
+    assert response.status_code == status_code, \
+        f"""Wrong status code, expected: {status_code}, received: {response.status_code}
+            message: {response.text}"""
