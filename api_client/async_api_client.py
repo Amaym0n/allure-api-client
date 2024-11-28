@@ -42,7 +42,7 @@ class AsyncAPIClient(AsyncClient):
 
     def __init__(
             self,
-            base_url: HttpUrl,
+            base_url: HttpUrl | str,
             cookies: Cookies | None = None,
             auth: Callable[..., Any] | object | None = None,
             verify: bool = False,
