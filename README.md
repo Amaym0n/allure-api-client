@@ -1,89 +1,126 @@
 # allure-api-client
 
-The `allure-api-client` library is a Python package designed to facilitate API testing and reporting in Allure. Built on
-top of the `httpx` library, it provides both synchronous and asynchronous clients for making HTTP requests, complete
-with automatic request and response logging for Allure reports. The library also includes utilities for bearer token
-authentication and status code verification.
+A lightweight API client built on top of httpx that adds convenient defaults for testing, plus optional Allure-friendly request/response logging. It ships with:
+- Synchronous and asynchronous clients
+- Optional Allure hooks to log cURL, request, and response details
+- Simple Bearer token authentication helper
+- Built-in status code verification in a single send_request call
 
-## Features
-
-- Synchronous and Asynchronous API Clients
-- Automatic logging of requests and responses in Allure reports
-- Bearer Token Authentication
-- Status Code Verification
+## Requirements
+- Python 3.11+
 
 ## Installation
-
-To install `allure-api-client`, you will need Python installed on your system. You can install the library using pip:
 
 ```bash
 pip install allure-api-client
 ```
 
-## Usage
+If you want Allure reporting, also install Allure and its pytest plugin and generate a report when you run tests:
+- Python dependency (already declared by this package): allure-pytest
+- CLI: https://docs.qameta.io/allure/
 
-### Synchronous API Client
+Example test run with Allure report generation:
+```bash
+pytest --alluredir=./allure-results
+allure serve ./allure-results
+```
+
+## Quick start (synchronous)
 
 ```python
-from api_client import APIClient
+from api_client import APIClient, BearerToken
 
-# Initialize the client
 client = APIClient(
     base_url="https://api.example.com",
-    auth=BearerToken("YOUR_ACCESS_TOKEN"),  # Optional
-    verify=False  # Optional
+    auth=BearerToken("YOUR_ACCESS_TOKEN"),  # optional
+    verify=False,                            # optional, default False
+    with_allure=True                         # optional, default True: enable Allure hooks
 )
 
-# Send a request
 response = client.send_request(
     method="GET",
-    path="/endpoint"
+    path="/users",
+    params={"page": 1},
+    # By default, the client expects HTTP 200 (HTTPStatus.OK)
+    # You can override the expectation per request:
+    # status_code=201,
 )
+print(response.status_code)
+print(response.json())
 ```
 
-### Asynchronous API Client
+## Quick start (asynchronous)
 
 ```python
-from api_client import AsyncAPIClient
+import asyncio
+from api_client import AsyncAPIClient, BearerToken
 
-# Initialize the client
-async with AsyncAPIClient(
+async def main() -> None:
+    async with AsyncAPIClient(
         base_url="https://api.example.com",
-        auth=BearerToken("YOUR_ACCESS_TOKEN"),  # Optional
-        verify=False  # Optional
-) as client:
-    # Send a request
-    response = await client.send_request(
-        method="GET",
-        path="/endpoint"
-    )
+        auth=BearerToken("YOUR_ACCESS_TOKEN"),  # optional
+        verify=False,                            # optional
+        with_allure=True                         # optional
+    ) as client:
+        response = await client.send_request(
+            method="GET",
+            path="/users",
+        )
+        print(response.status_code)
+        print(response.json())
+
+asyncio.run(main())
 ```
 
-### Bearer Token Authentication
+## Authentication
 
+Use a Bearer token if your API requires it:
 ```python
 from api_client import BearerToken
 
-# Initialize the bearer token
 auth = BearerToken("YOUR_ACCESS_TOKEN")
-
-# Use the auth with APIClient or AsyncAPIClient
+# pass it to APIClient/AsyncAPIClient via the auth parameter
 ```
 
-### Checking Status Code
+## Allure integration
+- By default, the clients are created with with_allure=True. The library will attach helpful request/response data to Allure, including a cURL snippet for easy reproduction.
+- If you do not use Allure, set with_allure=False to use minimal internal hooks instead.
 
+## Status code handling
+- send_request verifies the response status code for you using the status_code parameter (default: 200 OK).
+- If the actual status code does not match the expected value, an assertion-like error is raised coming from the underlying check.
+
+Example expecting 201 Created:
 ```python
-from api_client import check_status_code
+from api_client import APIClient
 
-# After receiving a response
-check_status_code(response, 200)  # Verifies that the status code is 200
+client = APIClient(base_url="https://api.example.com")
+response = client.send_request(
+    method="POST",
+    path="/users",
+    json={"name": "Alice"},
+    status_code=201,
+)
 ```
+
+## Configuration reference
+Common parameters on client initialization:
+- base_url: Base URL string for your API (e.g., https://api.example.com)
+- auth: Any httpx-compatible auth object; BearerToken helper is provided
+- cookies: Optional httpx.Cookies to send on each request
+- verify: Whether to verify TLS certificates (default False)
+- with_allure: Enable/disable Allure hooks (default True)
+
+Common parameters on send_request:
+- method: HTTP method (e.g., "GET", "POST", ...)
+- path: Path appended to base_url
+- headers, params, data, json, files
+- follow_redirects (default True)
+- timeout (seconds, default 300)
+- status_code: expected response status (default 200)
 
 ## Contributing
-
-Contributions to `allure-api-client` are welcome! Please follow the standard procedures to submit issues, pull requests,
-etc.
+Contributions are welcome! Please open an issue or a pull request.
 
 ## License
-
-`allure-api-client` is released under the [MIT License](LICENSE).
+Released under the MIT License. See [LICENSE](LICENSE).
