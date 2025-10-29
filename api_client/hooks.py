@@ -10,8 +10,8 @@ def request_hook(request: Request) -> str:
     headers = []
     for header in request.headers:
         headers.append(f'-H "{header}: {request.headers[header]}"')
-    body = '' if request.content == b'' \
-        else f" --data '{request.content if isinstance(request.content, str) else request.content.decode()}'"
+    body = '' if request.read() == b'' \
+        else f" --data '{request.read() if isinstance(request.read(), str) else request.read().decode()}'"
     logger.info(
         f"""Request: [{request.method}] --> {request.url}\n\tcurl --location '{request.url}' {' '.join(headers)}{body}"""
     )
