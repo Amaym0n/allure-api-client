@@ -40,10 +40,20 @@ class APIClient(Client):
             auth: Callable[..., Any] | object | None = None,
             verify: bool = False,
             with_allure: bool = True,
+            request_hooks: list[Callable[..., Any]] | None = None,
+            response_hooks: list[Callable[..., Any]] | None = None,
     ) -> None:
+        if any([request_hooks, response_hooks]):
+            with_allure = True
         if with_allure:
-            super().__init__(auth=None, verify=verify, event_hooks={'request': [allure_request_hook],
-                                                                    'response': [allure_response_hook]})
+            super().__init__(
+                auth=None,
+                verify=verify,
+                event_hooks={
+                    'request': request_hooks if request_hooks else [allure_request_hook],
+                    'response': response_hooks if response_hooks else [allure_response_hook],
+                },
+            )
         else:
             super().__init__(auth=None, verify=verify, event_hooks={'request': [request_hook],
                                                                     'response': [response_hook]})
