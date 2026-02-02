@@ -16,14 +16,12 @@ def request_hook(request: Request) -> str:
         f"""Request: [{request.method}] --> {request.url}\n\tcurl --location '{request.url}' {' '.join(headers)}{body}"""
     )
     curl = f"curl --insecure --location '{request.url}' {' '.join(headers)}{body}"
-    print(curl)
     return curl
 
 
 def response_hook(response: Response) -> str:
     response.read()
     resp_message = f'status_code: {response.status_code} \n  Content: \n {response.text}'
-    print(resp_message)
     return resp_message
 
 
