@@ -1,19 +1,21 @@
 from __future__ import annotations
 
+from functools import partial
 from http import HTTPStatus
 from typing import Any
 from typing import Callable
+from typing import TYPE_CHECKING
 
 from httpx import AsyncClient
 from httpx import Cookies
 from httpx import Response
-from pydantic import HttpUrl
 
-from api_client.hooks import allure_request_hook
-from api_client.hooks import allure_response_hook
-from api_client.hooks import request_hook
-from api_client.hooks import response_hook
+from api_client.hooks import async_request_hook
+from api_client.hooks import async_response_hook
 from api_client.status_code_method import check_status_code
+
+if TYPE_CHECKING:
+    from pydantic import HttpUrl
 
 
 class AsyncAPIClient(AsyncClient):
@@ -46,14 +48,32 @@ class AsyncAPIClient(AsyncClient):
             cookies: Cookies | None = None,
             auth: Callable[..., Any] | object | None = None,
             verify: bool = False,
-            with_allure: bool = True,
+            with_allure: bool = False,
+            with_print: bool = False,
+            with_logger: bool = True,
     ) -> None:
-        if with_allure:
-            super().__init__(auth=None, verify=verify, event_hooks={'request': [allure_request_hook],
-                                                                    'response': [allure_response_hook]})
-        else:
-            super().__init__(auth=None, verify=verify, event_hooks={'request': [request_hook],
-                                                                    'response': [response_hook]})
+        super().__init__(
+            auth=None,
+            verify=verify,
+            event_hooks={
+                'request': [
+                    partial(
+                        async_request_hook,
+                        with_print=with_print,
+                        with_allure=with_allure,
+                        with_logger=with_logger,
+                    ),
+                ],
+                'response': [
+                    partial(
+                        async_response_hook,
+                        with_print=with_print,
+                        with_allure=with_allure,
+                        with_logger=with_logger,
+                    ),
+                ],
+            },
+        )
         self.auth = auth
         self.cookies = cookies
         self.base_url = base_url

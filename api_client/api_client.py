@@ -1,18 +1,20 @@
 from __future__ import annotations
 
+from functools import partial
 from http import HTTPStatus
 from typing import Any
 from typing import Callable
+from typing import TYPE_CHECKING
 
 from httpx import Client
 from httpx import Cookies
-from pydantic import HttpUrl
 
-from api_client.hooks import allure_request_hook
-from api_client.hooks import allure_response_hook
 from api_client.hooks import request_hook
 from api_client.hooks import response_hook
 from api_client.status_code_method import check_status_code
+
+if TYPE_CHECKING:
+    from pydantic import HttpUrl
 
 
 class APIClient(Client):
@@ -40,23 +42,31 @@ class APIClient(Client):
             auth: Callable[..., Any] | object | None = None,
             verify: bool = False,
             with_allure: bool = True,
+            with_print: bool = False,
+            with_logger: bool = False,
             request_hooks: list[Callable[..., Any]] | None = None,
             response_hooks: list[Callable[..., Any]] | None = None,
     ) -> None:
-        if any([request_hooks, response_hooks]):
-            with_allure = True
-        if with_allure:
-            super().__init__(
-                auth=None,
-                verify=verify,
-                event_hooks={
-                    'request': request_hooks if request_hooks else [allure_request_hook],
-                    'response': response_hooks if response_hooks else [allure_response_hook],
-                },
-            )
-        else:
-            super().__init__(auth=None, verify=verify, event_hooks={'request': [request_hook],
-                                                                    'response': [response_hook]})
+        default_request_hook = partial(
+            request_hook,
+            with_print=with_print,
+            with_allure=with_allure,
+            with_logger=with_logger,
+        )
+        default_response_hook = partial(
+            response_hook,
+            with_print=with_print,
+            with_allure=with_allure,
+            with_logger=with_logger,
+        )
+        super().__init__(
+            auth=None,
+            verify=verify,
+            event_hooks={
+                'request': request_hooks if request_hooks else [default_request_hook],
+                'response': response_hooks if response_hooks else [default_response_hook],
+            },
+        )
         self.auth = auth
         self.cookies = cookies
         self.base_url = base_url

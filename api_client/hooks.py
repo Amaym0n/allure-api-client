@@ -1,4 +1,5 @@
 import logging
+from shlex import quote
 
 from httpx import Request
 from httpx import Response
@@ -6,23 +7,46 @@ from httpx import Response
 logger = logging.getLogger()
 
 
-def request_hook(request: Request) -> str:
-    headers = []
-    for header in request.headers:
-        headers.append(f'-H "{header}: {request.headers[header]}"')
-    body = '' if request.read() == b'' \
-        else f" --data '{request.read() if isinstance(request.read(), str) else request.read().decode()}'"
-    logger.info(
-        f"""Request: [{request.method}] --> {request.url}\n\tcurl --location '{request.url}' {' '.join(headers)}{body}"""
-    )
-    curl = f"curl --insecure --location '{request.url}' {' '.join(headers)}{body}"
-    return curl
+def build_curl(request: Request) -> str:
+    parts = [
+        'curl',
+        '--insecure',
+        '--location',
+        '--request',
+        request.method,
+        quote(str(request.url)),
+    ]
+
+    for header, value in request.headers.multi_items():
+        parts.extend(['--header', quote(f'{header}: {value}')])
+
+    content = request.read()
+    if content != b'':
+        body = content if isinstance(content, str) else content.decode(errors='replace')
+        parts.extend(['--data-raw', quote(body)])
+
+    return ' '.join(parts)
 
 
-def response_hook(response: Response) -> str:
+def build_response_message(response: Response) -> str:
     response.read()
-    resp_message = f'status_code: {response.status_code} \n  Content: \n {response.text}'
-    return resp_message
+    return f'status_code: {response.status_code} \n  Content: \n {response.text}'
+
+
+def print_request_hook(request: Request) -> None:
+    print(build_curl(request=request))
+
+
+def print_response_hook(response: Response) -> None:
+    print(build_response_message(response=response))
+
+
+def logger_request_hook(request: Request) -> None:
+    logger.info(build_curl(request=request))
+
+
+def logger_response_hook(response: Response) -> None:
+    logger.info(build_response_message(response=response))
 
 
 def allure_request_hook(request: Request) -> None:
@@ -40,9 +64,8 @@ def allure_request_hook(request: Request) -> None:
     """
     import allure
     with allure.step(title=f'Request: [{request.method}] --> {request.url}'):
-        curl = request_hook(request=request)
-        allure.attach(curl, 'request', allure.attachment_type.TEXT)
-    return
+        curl = build_curl(request=request)
+        allure.attach(curl, 'curl', allure.attachment_type.TEXT)
 
 
 def allure_response_hook(response: Response) -> None:
@@ -60,6 +83,65 @@ def allure_response_hook(response: Response) -> None:
     """
     import allure
     with allure.step(title=f'Response: [{response.request.method}] --> {response.request.url}'):
-        resp_message = response_hook(response=response)
+        resp_message = build_response_message(response=response)
         allure.attach(resp_message, 'response', allure.attachment_type.TEXT)
-    return
+
+
+def request_hook(
+        request: Request,
+        *,
+        with_print: bool = True,
+        with_allure: bool = True,
+        with_logger: bool = True,
+) -> None:
+    if with_print:
+        print_request_hook(request=request)
+    if with_logger:
+        logger_request_hook(request=request)
+    if with_allure:
+        allure_request_hook(request=request)
+
+
+def response_hook(
+        response: Response,
+        *,
+        with_print: bool = True,
+        with_allure: bool = True,
+        with_logger: bool = True,
+) -> None:
+    if with_print:
+        print_response_hook(response=response)
+    if with_logger:
+        logger_response_hook(response=response)
+    if with_allure:
+        allure_response_hook(response=response)
+
+
+async def async_request_hook(
+        request: Request,
+        *,
+        with_print: bool = True,
+        with_allure: bool = True,
+        with_logger: bool = True,
+) -> None:
+    request_hook(
+        request=request,
+        with_print=with_print,
+        with_allure=with_allure,
+        with_logger=with_logger,
+    )
+
+
+async def async_response_hook(
+        response: Response,
+        *,
+        with_print: bool = True,
+        with_allure: bool = True,
+        with_logger: bool = True,
+) -> None:
+    response_hook(
+        response=response,
+        with_print=with_print,
+        with_allure=with_allure,
+        with_logger=with_logger,
+    )

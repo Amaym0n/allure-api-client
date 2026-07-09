@@ -34,7 +34,9 @@ client = APIClient(
     base_url="https://api.example.com",
     auth=BearerToken("YOUR_ACCESS_TOKEN"),  # optional
     verify=False,                            # optional, default False
-    with_allure=True                         # optional, default True: enable Allure hooks
+    with_allure=True,                        # optional, default True: attach cURL/response to Allure
+    with_print=False,                        # optional, default False: print cURL/response
+    with_logger=False                        # optional, default False: log cURL/response
 )
 
 response = client.send_request(
@@ -60,7 +62,9 @@ async def main() -> None:
         base_url="https://api.example.com",
         auth=BearerToken("YOUR_ACCESS_TOKEN"),  # optional
         verify=False,                            # optional
-        with_allure=True                         # optional
+        with_allure=True,                        # optional
+        with_print=False,                        # optional
+        with_logger=False                        # optional
     ) as client:
         response = await client.send_request(
             method="GET",
@@ -84,7 +88,8 @@ auth = BearerToken("YOUR_ACCESS_TOKEN")
 
 ## Allure integration
 - By default, the clients are created with with_allure=True. The library will attach helpful request/response data to Allure, including a cURL snippet for easy reproduction.
-- If you do not use Allure, set with_allure=False to use minimal internal hooks instead.
+- If you do not use Allure, set with_allure=False.
+- Hooks can output the same cURL and response payload through print, logger, Allure attachments, or any combination of them with with_print, with_logger, and with_allure.
 
 ## Status code handling
 - send_request verifies the response status code for you using the status_code parameter (default: 200 OK).
@@ -110,6 +115,8 @@ Common parameters on client initialization:
 - cookies: Optional httpx.Cookies to send on each request
 - verify: Whether to verify TLS certificates (default False)
 - with_allure: Enable/disable Allure hooks (default True)
+- with_print: Enable/disable print hooks for cURL and response output (default False)
+- with_logger: Enable/disable logger hooks for cURL and response output (default False)
 
 Common parameters on send_request:
 - method: HTTP method (e.g., "GET", "POST", ...)
